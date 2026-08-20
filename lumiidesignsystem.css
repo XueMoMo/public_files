@@ -1,0 +1,764 @@
+/* =============================================================================
+   Lumii AI 控制台 · 前端视觉规范 v2
+   -----------------------------------------------------------------------------
+   定稿：Claude Design「Lumii 原型 4a」      更新：2026-08-20
+   取值与当前分支源码一字不差，可直接复制使用。
+
+   这一版的核心不是换主色，而是换了界面的组织方式：
+   整个应用共用一层带极光渐变的画布，各栏不再各自铺不透明底色、
+   不再用 1px 线切开，而是靠毛玻璃透出深浅。
+
+   贯穿全篇的一条规则：**不要用 border 画容器边框**。
+   半透明的栏与卡片压在渐变上，1px 实线会显出一条硬边；
+   `box-shadow: 0 0 0 1px` 是半透明的墨，会跟着背景一起走。
+   唯一例外是表格内部的 divide-y。
+
+   字体引入（放进 index.html 的 <head>）：
+     <link rel="preconnect" href="https://fonts.googleapis.com">
+     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+   ============================================================================= */
+
+
+/* =============================================================================
+   1. 设计令牌
+   ============================================================================= */
+:root {
+  /* ── 主色 · 三档 ─────────────────────────────────────────────────────────
+     #B695F5  渐变高光端，只在渐变里出现，不单独用
+     #A47BF0  ACC —— 填充 / 图标 / 选中态 / 徽标 / 描边
+     #8C5FE4  hover、渐变暗端，以及【所有紫色小字】
+
+     对比度取舍要说清楚：#A47BF0 压在纯白上是 3.15:1，达不到 WCAG AA 对正文
+     4.5:1 的要求。设计稿本身就这么用，这里跟随。正文一律 --ink（16:1），
+     紫色只出现在短标签、图标、已有底色衬托的小字上。 */
+  --primary:          #a47bf0;
+  --primary-h:        #8c5fe4;
+  --primary-light:    #b695f5;
+
+  /* 【紫色的字用这一档，不用 --primary】
+     #A47BF0 压在自己那条淡紫气泡上只有 2.75:1，会看不出高亮（报过 bug）；
+     #8C5FE4 白底 4.31:1、淡紫气泡上 3.76:1，都过得去。 */
+  --primary-ink:      #8c5fe4;
+
+  --primary-bg:       #f6f2fe;   /* 徽标底、@自己的芯片底 */
+  --primary-bg-weak:  #faf8fe;   /* 文件夹树里祖先行的弱高亮 */
+
+  /* ── 画布 ────────────────────────────────────────────────────────────────
+     整个应用共用 --app-canvas 这一层，各栏自己不铺不透明底色，靠毛玻璃
+     透出来 —— 这是「呼吸感」的来源：栏与栏之间没有硬边。 */
+  --bg:       #f7f7fa;
+  --panel:    #fff;
+  --panel-2:  #f7f8fa;
+  --app-canvas:
+    radial-gradient(820px 600px at 96% -14%, rgba(176, 140, 248, .42), transparent 68%),
+    radial-gradient(540px 420px at 72% -6%,  rgba(208, 190, 252, .30), transparent 72%),
+    radial-gradient(620px 480px at 0%  96%,  rgba(147, 232, 216, .28), transparent 64%),
+    var(--bg);
+
+  /* ── 文字与线 ───────────────────────────────────────────────────────────
+     暖中性灰阶，不要换成纯黑纯灰。 */
+  --ink:        #1f2329;   /* 正文，白底 16:1 */
+  --ink-2:      #646a73;   /* 次要文字、未选中的导航项 */
+  --ink-3:      #8f959e;   /* 占位符、时间、图标默认色 */
+  --line:       #dee0e3;   /* 结构边界（现多由发丝阴影代替） */
+  --line-soft:  #ebecee;   /* 块内部分隔线，比外框浅一档 */
+
+  /* ── 语义色 ─────────────────────────────────────────────────────────── */
+  --ok:      #34c724;   --ok-bg:      #eafbe7;
+  --warn:    #ff8800;   --warn-bg:    #fff5e6;
+  --danger:  #f54a45;   --danger-bg:  #fef1f1;   /* 危险、失败、@到我的提示 */
+  --purple:  #7f3bf5;   --purple-bg:  #f3edff;   /* 标签类紫，与主色区分 */
+
+  /* ── 气泡 / 形状 / 阴影 ─────────────────────────────────────────────────
+     气泡底色是【半透明】不是实色：底下是极光画布，实色会糊出一块方斑。 */
+  --bubble-mine: rgba(164, 123, 240, .07);
+  --rl:   12px;
+  --sh:   0 2px 8px  rgba(31, 35, 41, .06);
+  --sh-2: 0 6px 24px rgba(31, 35, 41, .14);
+
+  /* ── 字体 ───────────────────────────────────────────────────────────────
+     Instrument Sans 排一切正文与标题；JetBrains Mono 只排「元信息」——
+     时间戳、编号、快捷键、头像缩写、表头、眉标。
+     中文没有对应字形，自动回落苹方/黑体，等宽只作用在拉丁字与数字上。 */
+  --font-display: "Instrument Sans", -apple-system, BlinkMacSystemFont,
+                  "PingFang SC", "Hiragino Sans GB", sans-serif;
+  --font-mono:    "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* ── 接 vendor @lumii/ui：变量名不动，只换取值 ───────────────────────────
+     反过来（改 vendor 组件去用我们的变量名）意味着每次升级都要重改一遍。 */
+  --page-bg: var(--bg);
+  --glass: var(--panel);            --glass-strong: var(--panel);
+  --glass-hover: #f7f8fa;
+  --text: var(--ink);               --text-secondary: var(--ink-2);
+  --text-muted: var(--ink-3);
+  --accent: var(--primary);         --accent-light: var(--primary-bg);
+  --accent-text: var(--primary);
+  --accent-on-dark: #9aa4f2;        /* 深色底（代码块、终端）上的强调色 */
+  --border: var(--line);
+  --shadow-sm: var(--sh);           --shadow-card: var(--sh);
+  --shadow-lg: 0 12px 40px rgba(31, 35, 41, .1);
+  --radius: var(--rl);
+  --radius-sm: 10px;                --radius-xs: 8px;
+  --color-error: var(--danger);
+  --color-success: var(--ok);
+  --color-warning: var(--warn);
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+}
+
+
+/* =============================================================================
+   2. 品牌渐变四色
+   -----------------------------------------------------------------------------
+   logo、favicon、智能体头像、极光画布全部只从这四支取色，
+   颜色再多也还在一个家族里，不会变成花坛。
+
+     #C4B5FD  薰衣草 —— 球体主色、渐变起点
+     #A47BF0  紫     —— 与主色同一支
+     #F9B4C8  粉     —— 只在球体与智能体渐变里
+     #93E8D8  薄荷   —— 画布左下那团、下划线与标题渐变的收尾
+   ============================================================================= */
+
+
+/* =============================================================================
+   3. 材质与阴影
+   -----------------------------------------------------------------------------
+   界面只有四种材质，选哪一种取决于这块东西离画布多远：
+
+     画布      var(--app-canvas)                        Shell 最外层
+     玻璃·薄   rgba(255,255,255,.55) blur(18px)         左侧导航栏
+     玻璃·厚   rgba(255,255,255,.80~.82) blur(22px)     输入框、登录卡
+     白卡      #fff + 发丝描边 + 浅投影                  选中行、弹层
+
+   阴影档位：
+     发丝描边（代替 border）      0 0 0 1px rgba(20, 21, 26, .06)
+     发丝描边 · 主色（选中）      0 0 0 1px rgba(122, 79, 224, .14~.16)
+     栏与栏之间的竖缝            1px 0 0 rgba(20, 21, 26, .06)
+     抬起 · 一档                 0 1px 2px rgba(20, 21, 26, .06)
+     抬起 · 二档                 0 2px 10px rgba(20, 21, 26, .05)
+     浮层 --sh-2                 0 6px 24px rgba(31, 35, 41, .14)
+     输入框（唯一的深投影）       0 14px 44px rgba(20, 21, 26, .09)
+     玻璃卡片                    0 18px 52px rgba(20, 21, 26, .10)
+     主色按钮                    0 6px 18px rgba(164,123,240,.16)  hover .28
+
+   【性能】大面积 backdrop-filter 在低端机上会掉帧，已限制在导航栏、输入框、
+   气泡、登录卡四处，不要再扩散。不支持 backdrop-filter 时半透明白仍显示，
+   只是不模糊，界面仍可读，不需要额外兜底。
+   ============================================================================= */
+
+
+/* =============================================================================
+   4. 圆角阶梯
+   -----------------------------------------------------------------------------
+     5px    ⌘K 键帽、「智能体」徽标
+     8px    发送按钮（--radius-xs）
+     9px    分段控件的选中段
+    11px    导航行、图标按钮、输入框、搜索框、分段控件外壳、头像(36px)
+    12px    会话行、环境卡、基础卡片（--rl）
+    14px    消息气泡
+    18px    消息输入框、登录页产品截图框
+    20px    登录卡片
+   999px    未读徽标、隔离标签、情境药丸
+
+   头像半径公式：max(6, round(size × 0.31))  →  28px→9  36px→11  48px→15
+
+   【图标】lucide-react，线宽统一细一档，不要用默认的 2：
+     导航与内容 1.8 / 工具栏 1.7 / 小号搜索 1.9
+     尺寸：导航 17 · 工具栏 16 · 分段控件 14 · 行内 14~15
+   ============================================================================= */
+
+
+/* =============================================================================
+   5. 布局结构
+   -----------------------------------------------------------------------------
+   桌面端最多三栏。会话列表从导航栏里搬出来，自己占一栏，且只在「对话」出现。
+
+     导航栏   216px / 收起 60px  不可拖   玻璃 .55        全部页面
+     会话栏   268px 可拖 220~420          完全透明        仅 / 与 /c/<id>
+     主区     flex: 1                     透明（画布直出） 全部页面
+
+   · 可拖的是会话栏，不再是导航栏 —— 导航栏宽度由最长的名字决定。
+   · 窄屏(<768px)没有第二栏，会话列表跟着导航收在抽屉里；抽屉玻璃换 .97。
+   · 导航项：对话 / 智能体 / 自动化 / 智能表 / 知识库 / 通讯录 / 设置。
+     第一项从「新会话」改名「对话」，新建入口移到会话栏标题行右边的 ＋。
+   · 左栏底部自上而下：环境标识卡、账号行。
+   · 顶栏高度 56px，透明无分割线。
+   ============================================================================= */
+
+.app-canvas { background: var(--app-canvas); }
+
+
+/* =============================================================================
+   6. 左侧导航栏
+   ============================================================================= */
+
+/* 窄屏抽屉态改用 rgba(255,255,255,.97) —— .55 会把身后那层
+   rgba(31,35,41,.35) 的遮罩一起透进来，整条栏发灰发脏。 */
+.rail {
+  width: 216px;                                 /* 收起态 60px */
+  background: rgba(255, 255, 255, .55);
+  backdrop-filter: blur(18px) saturate(1.25);
+  -webkit-backdrop-filter: blur(18px) saturate(1.25);
+  box-shadow: 1px 0 0 rgba(20, 21, 26, .06);    /* 竖缝，不是 border */
+}
+.rail--collapsed { width: 60px; }
+.rail--drawer    { background: rgba(255, 255, 255, .97); }
+
+/* 导航行：选中态是白卡 + 主色描边，不是只把文字染色 ——
+   玻璃底上纯染色几乎看不出来，抬一块白出来才分得清在哪一页。 */
+.rail-nav-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 38px;
+  padding: 0 10px;
+  margin-bottom: 3px;
+  border-radius: 11px;
+  font-size: 13.5px;
+  font-weight: 400;
+  color: var(--ink-2);
+}
+.rail-nav-row.is-on {
+  color: var(--primary);
+  font-weight: 600;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(20, 21, 26, .06),
+              0 0 0 1px rgba(122, 79, 224, .14);
+}
+/* 收起态：40×40 方块，同一套选中样式，圆角 11px */
+.rail-icon-btn {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+  color: var(--ink-3);
+}
+
+/* 环境标识卡（左栏底部，账号行正上方） */
+.rail-env {
+  padding: 0 4px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .62);
+  box-shadow: 0 0 0 1px rgba(20, 21, 26, .05);
+}
+
+
+/* =============================================================================
+   7. 分段控件（协作 / 小程序）
+   ============================================================================= */
+
+/* 凹槽用一层极淡的墨，不用边框 —— 1px 线在玻璃栏上会多出一道硬线 */
+.module-switch {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  width: 100%;
+  padding: 3px;
+  border-radius: 11px;
+  background: rgba(20, 21, 26, .045);
+}
+.module-switch__tab {
+  flex: 1;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 9px;
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+.module-switch__tab[aria-selected="true"] {
+  color: var(--primary);
+  font-weight: 600;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(20, 21, 26, .07);
+}
+
+
+/* =============================================================================
+   8. 会话栏
+   ============================================================================= */
+
+/* 这一栏不铺底、不描边 —— 极光直接透上来，会话行靠自己的圆角卡片浮在上面。
+   铺一层玻璃再画一条竖线，就又变回三个格子了。 */
+.thread-column {
+  width: 268px;              /* 可拖 220~420 */
+  background: transparent;
+}
+
+/* 搜索框长得像输入框，点了开全局面板（⌘K），所以是 button 不是 input ——
+   做成真 input 会有两个输入焦点要同步。 */
+.thread-search {
+  width: 100%;
+  height: 36px;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 11px;
+  font-size: 13px;
+  color: var(--ink-3);
+  text-align: left;
+  background: rgba(255, 255, 255, .72);
+  box-shadow: 0 1px 2px rgba(20, 21, 26, .04),
+              0 0 0 1px rgba(20, 21, 26, .06);
+}
+.thread-search kbd {
+  margin-left: auto;
+  padding: 1px 6px;
+  border-radius: 5px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-3);
+  background: rgba(20, 21, 26, .05);
+}
+
+/* 会话行：选中是一张浮起来的白卡片，不再是一块灰底 ——
+   灰底压在渐变上会变成一块死板的方块。hover 用极淡的白，不抢选中态。 */
+.conv-row {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  transition: background .12s;
+}
+.conv-row:hover     { background: rgba(255, 255, 255, .55); }
+.conv-row.is-active {
+  background: #fff;
+  box-shadow: 0 2px 10px rgba(20, 21, 26, .05),
+              0 0 0 1px rgba(122, 79, 224, .16);
+}
+.conv-row__title { font-size: 13px; color: var(--ink); }
+.conv-row.is-active .conv-row__title,
+.conv-row.has-unread .conv-row__title { font-weight: 600; }
+.conv-row.is-active  .conv-row__title { color: var(--primary); }
+.conv-row__preview   { font-size: 12px; color: var(--ink-3); }
+.conv-row__time      { font-size: 11px; color: var(--ink-3); }
+.conv-row__unread {
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  font-size: 10px;
+  color: #fff;
+  background: var(--primary);
+}
+.conv-row__mentioned { color: var(--danger); }   /* @到我那个前缀 */
+
+
+/* =============================================================================
+   9. 会话顶栏
+   ============================================================================= */
+
+/* 不铺底、不描线 —— 一条横线会把刚打通的上下两半又切开。
+   滚动时消息从它下面穿过去，靠的是消息区自己的留白。 */
+.chat-header {
+  height: 56px;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: transparent;
+}
+
+
+/* =============================================================================
+   10. 消息气泡 · 三种
+   -----------------------------------------------------------------------------
+   半透明是关键：底下是极光画布，实色会糊出一块方斑。
+   ============================================================================= */
+.bubble {
+  padding: 12px 16px;
+  border-radius: 14px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--ink);
+}
+
+/* 自己发的：极淡的紫 + 一圈同色描边 */
+.bubble--mine {
+  background: var(--bubble-mine);
+  box-shadow: 0 0 0 1px rgba(164, 123, 240, .13);
+}
+.bubble--mine.is-sending { opacity: .92; }
+.bubble--mine.is-failed  {
+  background: color-mix(in srgb, var(--bubble-mine) 55%, #d5d8dd);
+}
+
+/* 智能体：与它上面那张「工作过程」卡片同一种材质，
+   读起来是同一段回答的两半。 */
+.bubble--agent {
+  background: rgba(255, 255, 255, .66);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 0 0 1px rgba(20, 21, 26, .055);
+}
+
+/* 别人发的：同材质但不透玻璃，白一档 ——
+   群里得分得清「这句是同事说的」还是「机器答的」。 */
+.bubble--other {
+  background: rgba(255, 255, 255, .86);
+  box-shadow: 0 0 0 1px rgba(20, 21, 26, .055);
+}
+
+/* 「智能体」徽标：头像收成中性灰之后，这是全屏唯一带色的身份标识 */
+.agent-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 5px;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--primary);
+  background: var(--primary-bg);
+}
+
+/* @ 芯片：字色用 --primary-ink（深一档），压在淡紫气泡上才够对比。
+   有测试钉着 ≥3:1 这条门槛。 */
+.mention-chip      { color: var(--primary-ink); }
+.mention-chip--me  { color: var(--primary-ink); background: var(--primary-bg); }
+
+/* 气泡上方的发送方名字：平时是安静的灰字，hover 才变成可点的 @名字。
+   那个 @ 由 ::before 出、不进 DOM —— 它是纯装饰，进了 DOM 会跟着进
+   无障碍名字与 textContent。 */
+.mention-name {
+  color: var(--ink-2);
+  cursor: pointer;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+}
+.mention-name:hover         { color: var(--primary); text-decoration: underline; }
+.mention-name:hover::before { content: "@"; }
+
+
+/* =============================================================================
+   11. 消息输入框
+   -----------------------------------------------------------------------------
+   它是唯一「浮」在画布上方的东西，那道深投影就是那点高度差。
+   ============================================================================= */
+.composer {
+  border-radius: 18px;
+  border: none;
+  background: rgba(255, 255, 255, .80);
+  backdrop-filter: blur(22px) saturate(1.3);
+  -webkit-backdrop-filter: blur(22px) saturate(1.3);
+  box-shadow: 0 14px 44px rgba(20, 21, 26, .09),
+              0 0 0 1px rgba(20, 21, 26, .06);
+}
+.composer__send {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: linear-gradient(140deg, var(--primary-light),
+                              var(--primary) 60%, var(--primary-h));
+  box-shadow: 0 4px 14px rgba(122, 79, 224, .28);
+}
+.composer__send:disabled { opacity: .4; }
+
+
+/* =============================================================================
+   12. 头像
+   -----------------------------------------------------------------------------
+   全部改为【圆角方】，半径 max(6, round(size × 0.31))。
+   缩写用等宽字体，一列头像宽度不会左右晃。
+
+   【只有智能体的头像有颜色】人和会话一律中性灰 —— 颜色留给真正要抢注意力的
+   东西（未读徽标、「智能体」徽标、选中态）。头像一旦有六种颜色，那几个要紧
+   的信号就淹在花坛里了。
+   ============================================================================= */
+
+/* 人 / 会话：中性灰。字色 #5C5F6B 在那层底上约 6.2:1 */
+.avatar {
+  display: grid;
+  place-items: center;
+  border-radius: 11px;                     /* 36px 尺寸对应值 */
+  background: rgba(20, 21, 26, .05);
+  color: #5c5f6b;
+  box-shadow: 0 0 0 1px rgba(20, 21, 26, .05);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 12px;                         /* = max(9, round(size × 0.34)) */
+}
+
+/* 会话头像是 SVG，SVG 里 box-shadow 不生效，等价写法：
+     <rect width="40" height="40" rx="12" fill="#f2f2f3" />
+     <rect x=".5" y=".5" width="39" height="39" rx="11.5" fill="none"
+           stroke="rgba(20,21,26,.07)" stroke-width="1" />
+   用户手选过颜色的，字色换白、不画描边。 */
+
+/* 智能体兜底头像：六条渐变，按名字哈希取一条，全部取自品牌球四色 */
+.avatar--agent {
+  color: #fff;
+  box-shadow: none;
+  font-size: 11px;                         /* = max(9, round(size × 0.31)) */
+}
+.avatar--agent-1 { background: linear-gradient(135deg, #c4b5fd, #a47bf0); }
+.avatar--agent-2 { background: linear-gradient(135deg, #c4b5fd, #93e8d8); }
+.avatar--agent-3 { background: linear-gradient(135deg, #f9b4c8, #c4b5fd); }
+.avatar--agent-4 { background: linear-gradient(135deg, #b695f5, #8c5fe4); }
+.avatar--agent-5 { background: linear-gradient(135deg, #93e8d8, #c4b5fd); }
+.avatar--agent-6 { background: linear-gradient(135deg, #d0befc, #a47bf0); }
+
+
+/* =============================================================================
+   13. 表单与按钮
+   ============================================================================= */
+
+/* 输入框：没有 border，那圈线是 box-shadow —— focus 时再叠一圈主色 */
+.field {
+  width: 100%;
+  height: 46px;
+  padding: 0 13px;
+  border: none;
+  border-radius: 11px;
+  background: var(--panel);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  box-shadow: 0 0 0 1px rgba(20, 21, 26, .11);
+  transition: box-shadow .16s ease;
+}
+.field::placeholder { color: var(--ink-2); }
+.field:focus-visible {
+  outline: 2px solid rgba(164, 123, 240, .28);
+  outline-offset: 1px;
+  box-shadow: 0 0 0 1px var(--primary);
+}
+
+/* 主按钮：渐变底 + 紫色投影，hover 抬 1px */
+.btn-primary {
+  height: 46px;
+  border: none;
+  border-radius: 11px;
+  color: #fff;
+  font-weight: 600;
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  background: linear-gradient(140deg, var(--primary-light),
+                              var(--primary) 60%, var(--primary-h));
+  box-shadow: 0 6px 18px rgba(164, 123, 240, .16);
+  transition: box-shadow .16s ease, transform .16s ease;
+}
+.btn-primary:hover:not(:disabled) {
+  box-shadow: 0 8px 24px rgba(164, 123, 240, .28);
+  transform: translateY(-1px);
+}
+
+/* 次级方块按钮（第三方登录入口一类） */
+.btn-ghost {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 11px;
+  background: var(--panel);
+  color: var(--ink);
+  box-shadow: 0 0 0 1px rgba(20, 21, 26, .11);
+  transition: box-shadow .16s ease, transform .16s ease;
+}
+.btn-ghost:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(20, 21, 26, .09),
+              0 0 0 1px rgba(164, 123, 240, .28);
+}
+
+/* 玻璃卡片（登录表单容器） */
+.glass-card {
+  padding: 36px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, .82);
+  backdrop-filter: blur(22px) saturate(1.3);
+  -webkit-backdrop-filter: blur(22px) saturate(1.3);
+  box-shadow: 0 18px 52px rgba(20, 21, 26, .10),
+              0 0 0 1px rgba(20, 21, 26, .06);
+}
+
+/* 卡片内的分隔：用一条发丝阴影，不用 border-bottom */
+.glass-card__head {
+  padding-bottom: 18px;
+  margin-bottom: 26px;
+  box-shadow: 0 1px 0 rgba(20, 21, 26, .06);
+}
+
+/* 标签页下划线：从左展开的渐变条，紫 → 薄荷 */
+.tab {
+  position: relative;
+  padding: 4px 0 10px;
+  border: 0;
+  background: transparent;
+  color: var(--ink-2);
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: color .16s ease;
+}
+.tab:hover { color: var(--ink); }
+.tab::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 100%;
+  bottom: 0;
+  height: 2px;
+  border-radius: 1px;
+  background: linear-gradient(90deg, var(--primary), #93e8d8);
+  transition: right .32s cubic-bezier(.4, 0, .2, 1);
+}
+.tab[aria-selected="true"]::after { right: 0; }
+.tab .num {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: .08em;
+  color: var(--ink-2);
+  transition: color .16s ease;
+}
+.tab[aria-selected="true"] .num { color: var(--primary); }
+
+
+/* =============================================================================
+   14. 登录页极光
+   -----------------------------------------------------------------------------
+   整页共用一层，而不是分别画在左右两半里 —— 两侧本来就是同一块画布，
+   接缝处不该有一条硬边。用 ::before 是为了单独给它挂动画。
+   ============================================================================= */
+.login-page {
+  position: relative;
+  min-height: 100%;
+  display: flex;
+  overflow: hidden;
+  background: #f7f7fa;
+  color: var(--ink);
+}
+.login-page::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(820px 600px at 16% -12%, rgba(164, 123, 240, .16), transparent 62%),
+    radial-gradient(680px 520px at 94% -8%,  rgba(164, 123, 240, .16), transparent 62%),
+    radial-gradient(560px 420px at 46% -6%,  rgba(164, 123, 240, .10), transparent 68%),
+    radial-gradient(720px 560px at 0%  96%,  rgba(147, 232, 216, .22), transparent 66%);
+  animation: login-aurora-drift 24s ease-in-out infinite;
+}
+@keyframes login-aurora-drift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50%      { transform: translate3d(-2%, 1.5%, 0) scale(1.06); }
+}
+
+/* 营销大标题的渐变字。【产品界面里的文字一律不要用渐变】—— 那会让它读起来像广告。 */
+.headline-gradient {
+  background: linear-gradient(100deg, var(--primary-light), #c4b5fd 45%, #93e8d8);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+
+/* =============================================================================
+   15. 字号表
+   -----------------------------------------------------------------------------
+   营销大标题     clamp(32px, 3.35vw, 48px) / 600 / -.02em     Display
+   页面标题       26px / 600 / -.02em                          Display
+   正文基准       14px / 400                                    Display
+   导航项         13.5px / 400，选中 600                        Display
+   会话标题·气泡  13px / 400，未读 600                          Display
+   分段控件       12.5px / 400，选中 600                        Display
+   会话摘要       12px / 400 / --ink-3                          Display
+   「智能体」徽标 10.5px / 600                                   Display
+   眉标·表头·时间 10~13px / 500~600 / letter-spacing .02~.08em  Mono
+   快捷键 ⌘K      10px / 400                                    Mono
+   头像缩写       size × 0.34 / 600                             Mono
+   ============================================================================= */
+
+
+/* =============================================================================
+   16. 动效与无障碍
+   -----------------------------------------------------------------------------
+   时长基准：微交互 .16s · 抽屉 .18~.2s · 下划线 .32s · 环境级 24s
+
+   焦点：可交互元素一律保留可见焦点环，不要为了视觉整洁写 outline: none。
+
+   对比度实测（有测试钉着这些门槛）：
+     #1F2329 on #fff                  16.0:1  正文，充裕
+     #5C5F6B on rgba(20,21,26,.05)     6.2:1  头像缩写，充裕
+     #8C5FE4 on #fff                   4.31:1 紫色小字的下限
+     #8C5FE4 on 淡紫气泡                3.76:1 @芯片，过线
+     #A47BF0 on #fff                   3.15:1 仅限图标与徽标
+     #A47BF0 on 淡紫气泡                2.75:1 【禁止】，用 --primary-ink
+   ============================================================================= */
+
+:focus-visible {
+  outline: 2px solid rgba(164, 123, 240, .28);
+  outline-offset: 1px;
+}
+
+/* Lumii 的加载动画：三格按笔顺亮起来。
+   用 opacity 而不是 transform —— 后者在长列表里会触发额外的合成层。 */
+@keyframes lumii-blink {
+  0%, 70%, 100% { opacity: .22; }
+  35%           { opacity: 1; }
+}
+.lumii-cell { animation: lumii-blink 1.1s ease-in-out infinite; }
+
+/* 关掉动画的人不该被闪 —— 静态的三格也说明了「在等」 */
+@media (prefers-reduced-motion: reduce) {
+  .lumii-cell        { animation: none; opacity: .55; }
+  .login-page::before { animation: none; }
+  .conv-row          { transition: none; }
+}
+
+
+/* =============================================================================
+   17. 落地清单 —— 最容易写错的九条
+   -----------------------------------------------------------------------------
+   ✕ 不要用 border: 1px solid 画容器边框。换成 box-shadow: 0 0 0 1px
+     rgba(20,21,26,.06)。表格内部的 divide-y 是唯一例外，且颜色必须写在
+     divide-[...] 工具类上 —— 写在父元素 inline style 里会静默失效
+     （border-color 不继承，子元素会落到 currentColor 也就是正文的近黑色）。
+   ✕ 不要给栏铺不透明底色。除导航栏（玻璃 .55）外，会话栏与主区都是透明的。
+   ✕ 不要用 --primary 当小号文字色。紫色的字一律 --primary-ink。
+   ✕ 不要给头像上色。只有智能体的兜底头像用品牌渐变。
+   ✕ 不要在气泡里用实色底。--bubble-mine 是半透明的。
+   ✓ 圆角按尺寸走阶梯：小控件 5~9px、行与卡片 11~12px、气泡 14px、
+     输入框与大卡 18~20px。
+   ✓ lucide 图标线宽降到 1.7~1.8。
+   ✓ 元信息用 --font-mono（时间戳、编号、快捷键、表头、眉标、头像缩写），
+     但正文与标题不要用。
+   ✓ 新写的颜色必须来自本文色板。theme-color-guard.test.ts 会拦下旧橘
+     #E8734A 与 vendor 旧蓝 rgba(0,82,204)；新增取值请一并加进那份守卫。
+
+   涉及的文件：
+     web/src/styles.css                         全部令牌、画布配方、全局字体
+     web/index.html                             Google Fonts 引入、favicon
+     web/src/shell.tsx                          三栏结构、导航栏、会话栏、会话行
+     web/src/dev/shell.tsx                      小程序模块左栏（同一套玻璃）
+     web/src/pages/chat.tsx                     顶栏、三种气泡、徽标、@芯片
+     web/src/vendor/lumii-ui/.../ChatInput.tsx  输入框玻璃与发送按钮渐变
+     web/src/components/module-switch.tsx       分段控件
+     web/src/components/avatar.tsx              人的头像（AVATAR_SURFACE）
+     web/src/components/conv-avatar.tsx         会话头像（SVG）
+     web/src/pages/assistants/avatar.tsx        智能体头像与六条品牌渐变
+     web/src/components/brand.tsx               品牌球（与 favicon.svg 同源）
+     web/src/pages/login.css                    登录页极光、玻璃卡、表单、下划线
+   ============================================================================= */

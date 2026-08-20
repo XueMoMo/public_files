@@ -1,0 +1,1536 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Lumii 极光视觉规范</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+/* ═══════════════════════════════════════════════════════════
+   文档自身的令牌。产品是纯浅色的，所以「样张」永远按浅色渲染
+   （见 .spec），只有文档的纸张与文字跟随阅读者的主题。
+   ═══════════════════════════════════════════════════════════ */
+:root {
+  --ground: #f7f7fa;
+  --paper: #ffffff;
+  --ink: #14151a;
+  --ink-2: #5c5f6b;
+  --ink-3: #8f929e;
+  --accent: #8c5fe4;
+  --accent-soft: #a47bf0;
+  --mint: #2fa08c;
+  --hair: rgba(20, 21, 26, .10);
+  --hair-soft: rgba(20, 21, 26, .06);
+  --code-bg: #f4f3f8;
+  --code-ink: #33323d;
+  --tint: rgba(164, 123, 240, .07);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #131318;
+    --paper: #1a1a21;
+    --ink: #eceaf3;
+    --ink-2: #a5a3b2;
+    --ink-3: #7b7a88;
+    --accent: #c4b5fd;
+    --accent-soft: #b695f5;
+    --mint: #93e8d8;
+    --hair: rgba(255, 255, 255, .13);
+    --hair-soft: rgba(255, 255, 255, .07);
+    --code-bg: #121218;
+    --code-ink: #cfcddb;
+    --tint: rgba(164, 123, 240, .12);
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #131318;
+  --paper: #1a1a21;
+  --ink: #eceaf3;
+  --ink-2: #a5a3b2;
+  --ink-3: #7b7a88;
+  --accent: #c4b5fd;
+  --accent-soft: #b695f5;
+  --mint: #93e8d8;
+  --hair: rgba(255, 255, 255, .13);
+  --hair-soft: rgba(255, 255, 255, .07);
+  --code-bg: #121218;
+  --code-ink: #cfcddb;
+  --tint: rgba(164, 123, 240, .12);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: "Instrument Sans", -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", sans-serif;
+  font-size: 15px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+.mono, code, kbd {
+  font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+/* ── 页面骨架 ───────────────────────────────────────────── */
+.page {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 0 28px 120px;
+}
+
+.masthead {
+  padding: 72px 0 40px;
+  border-bottom: 1px solid var(--hair);
+}
+.eyebrow {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 18px;
+}
+.masthead h1 {
+  margin: 0;
+  font-size: clamp(34px, 5vw, 54px);
+  line-height: 1.08;
+  font-weight: 600;
+  letter-spacing: -.03em;
+  text-wrap: balance;
+}
+.masthead h1 em {
+  font-style: normal;
+  background: linear-gradient(100deg, #b695f5, #a47bf0 40%, #4fbfa8);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.lede {
+  max-width: 62ch;
+  margin: 22px 0 0;
+  font-size: 17px;
+  color: var(--ink-2);
+}
+.factbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 32px;
+  margin-top: 32px;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 11.5px;
+  color: var(--ink-3);
+}
+.factbar b { color: var(--ink-2); font-weight: 500; }
+
+.wrap {
+  display: grid;
+  grid-template-columns: 176px minmax(0, 1fr);
+  gap: 64px;
+  align-items: start;
+}
+
+/* 目录：桌面粘在左侧，窄屏收起来 */
+.toc {
+  position: sticky;
+  top: 32px;
+  padding-top: 56px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.toc a {
+  display: flex;
+  gap: 10px;
+  padding: 5px 0;
+  color: var(--ink-3);
+  text-decoration: none;
+  font-size: 13px;
+  border-bottom: 1px solid transparent;
+  transition: color .15s ease;
+}
+.toc a:hover { color: var(--ink); }
+.toc a span {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 10.5px;
+  letter-spacing: .06em;
+  color: var(--accent-soft);
+  padding-top: 2px;
+}
+.toc a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+
+section { padding-top: 56px; scroll-margin-top: 24px; }
+section > h2 {
+  margin: 0 0 6px;
+  font-size: 27px;
+  font-weight: 600;
+  letter-spacing: -.02em;
+}
+.sec-no {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: .14em;
+  color: var(--accent);
+  display: block;
+  margin-bottom: 10px;
+}
+section > p { max-width: 66ch; color: var(--ink-2); }
+h3 {
+  margin: 40px 0 12px;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -.01em;
+}
+h4 {
+  margin: 28px 0 10px;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+p { margin: 0 0 14px; }
+strong { font-weight: 600; color: var(--ink); }
+a { color: var(--accent); }
+
+.note {
+  max-width: 66ch;
+  margin: 18px 0;
+  padding: 14px 16px;
+  border-left: 2px solid var(--accent-soft);
+  background: var(--tint);
+  border-radius: 0 10px 10px 0;
+  font-size: 14px;
+  color: var(--ink-2);
+}
+.note b { color: var(--ink); }
+
+/* ── 代码块 ─────────────────────────────────────────────── */
+pre {
+  margin: 14px 0 0;
+  padding: 18px 20px;
+  background: var(--code-bg);
+  color: var(--code-ink);
+  border-radius: 12px;
+  border: 1px solid var(--hair-soft);
+  overflow-x: auto;
+  font-size: 12.5px;
+  line-height: 1.75;
+  tab-size: 2;
+}
+pre .c { color: var(--ink-3); font-style: italic; }
+pre .p { color: var(--accent); }
+code:not(pre code) {
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: var(--code-bg);
+  font-size: .88em;
+  color: var(--code-ink);
+}
+
+/* ── 表格 ───────────────────────────────────────────────── */
+.tablewrap { overflow-x: auto; margin: 14px 0 0; }
+table {
+  width: 100%;
+  min-width: 520px;
+  border-collapse: collapse;
+  font-size: 13.5px;
+  font-variant-numeric: tabular-nums;
+}
+th {
+  text-align: left;
+  padding: 8px 14px 8px 0;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  border-bottom: 1px solid var(--hair);
+  white-space: nowrap;
+}
+td {
+  padding: 10px 14px 10px 0;
+  border-bottom: 1px solid var(--hair-soft);
+  color: var(--ink-2);
+  vertical-align: top;
+}
+td:first-child { color: var(--ink); }
+td .mono { font-size: 12px; }
+
+/* ── 色卡 ───────────────────────────────────────────────── */
+.swatches {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+.sw {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--hair-soft);
+  background: var(--paper);
+}
+.sw i {
+  display: block;
+  height: 68px;
+}
+.sw div { padding: 10px 12px 12px; }
+.sw b {
+  display: block;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--ink);
+}
+.sw em {
+  display: block;
+  font-style: normal;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 11px;
+  color: var(--ink-3);
+  margin-top: 2px;
+}
+.sw span {
+  display: block;
+  font-size: 12px;
+  color: var(--ink-2);
+  margin-top: 6px;
+  line-height: 1.45;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   样张容器 —— 产品是浅色的，这里的颜色一律写死，不跟随文档主题，
+   否则展示的就不是规范本身了。
+   ═══════════════════════════════════════════════════════════ */
+.spec {
+  margin-top: 16px;
+  padding: 26px;
+  border-radius: 16px;
+  border: 1px solid var(--hair-soft);
+  color: #1f2329;
+  font-size: 14px;
+  background:
+    radial-gradient(560px 420px at 96% -20%, rgba(176, 140, 248, .42), transparent 68%),
+    radial-gradient(380px 300px at 72% -10%, rgba(208, 190, 252, .30), transparent 72%),
+    radial-gradient(440px 340px at 0% 100%, rgba(147, 232, 216, .28), transparent 64%),
+    #f7f7fa;
+}
+.spec--flat { background: #f7f7fa; }
+.spec-label {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 10.5px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: #8f959e;
+  margin-bottom: 14px;
+}
+.spec-row { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; }
+
+/* —— 以下是产品组件的真实样式，与源码取值一致 —— */
+.lumii-rail {
+  width: 216px;
+  padding: 10px 12px 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, .55);
+  backdrop-filter: blur(18px) saturate(1.25);
+  -webkit-backdrop-filter: blur(18px) saturate(1.25);
+  box-shadow: 1px 0 0 rgba(20, 21, 26, .06);
+}
+.lumii-nav-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 38px;
+  padding: 0 10px;
+  margin-bottom: 3px;
+  border-radius: 11px;
+  font-size: 13.5px;
+  color: #646a73;
+}
+.lumii-nav-row.is-on {
+  color: #a47bf0;
+  font-weight: 600;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(20, 21, 26, .06), 0 0 0 1px rgba(122, 79, 224, .14);
+}
+.lumii-nav-row svg { width: 17px; height: 17px; flex: none; }
+
+.lumii-seg {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px;
+  border-radius: 11px;
+  background: rgba(20, 21, 26, .045);
+  width: 192px;
+  margin-bottom: 10px;
+}
+.lumii-seg > span {
+  flex: 1;
+  height: 28px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: #8f959e;
+}
+.lumii-seg > span.is-on {
+  color: #a47bf0;
+  font-weight: 600;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(20, 21, 26, .07);
+}
+
+.lumii-search {
+  width: 232px;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #8f959e;
+  background: rgba(255, 255, 255, .72);
+  box-shadow: 0 1px 2px rgba(20, 21, 26, .04), 0 0 0 1px rgba(20, 21, 26, .06);
+}
+.lumii-kbd {
+  margin-left: auto;
+  padding: 1px 6px;
+  border-radius: 5px;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 10px;
+  color: #8f959e;
+  background: rgba(20, 21, 26, .05);
+}
+
+.lumii-conv {
+  width: 236px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  margin-bottom: 4px;
+}
+.lumii-conv.is-active {
+  background: #fff;
+  box-shadow: 0 2px 10px rgba(20, 21, 26, .05), 0 0 0 1px rgba(122, 79, 224, .16);
+}
+.lumii-conv.is-hover { background: rgba(255, 255, 255, .55); }
+.lumii-conv b { font-size: 13px; font-weight: 600; display: block; }
+.lumii-conv.is-active b { color: #a47bf0; }
+.lumii-conv small { font-size: 12px; color: #8f959e; }
+
+.lumii-bubble {
+  max-width: 340px;
+  padding: 12px 16px;
+  font-size: 13px;
+  line-height: 1.7;
+  border-radius: 14px;
+  color: #1f2329;
+}
+.lumii-bubble--mine {
+  background: rgba(164, 123, 240, .07);
+  box-shadow: 0 0 0 1px rgba(164, 123, 240, .13);
+}
+.lumii-bubble--agent {
+  background: rgba(255, 255, 255, .66);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 0 0 1px rgba(20, 21, 26, .055);
+}
+.lumii-bubble--other {
+  background: rgba(255, 255, 255, .86);
+  box-shadow: 0 0 0 1px rgba(20, 21, 26, .055);
+}
+
+.lumii-composer {
+  width: 100%;
+  max-width: 520px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #8f959e;
+  font-size: 13px;
+  background: rgba(255, 255, 255, .80);
+  backdrop-filter: blur(22px) saturate(1.3);
+  -webkit-backdrop-filter: blur(22px) saturate(1.3);
+  box-shadow: 0 14px 44px rgba(20, 21, 26, .09), 0 0 0 1px rgba(20, 21, 26, .06);
+}
+.lumii-send {
+  margin-left: auto;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: linear-gradient(140deg, #b695f5, #a47bf0 60%, #8c5fe4);
+  box-shadow: 0 4px 14px rgba(122, 79, 224, .28);
+}
+
+.lumii-avatar {
+  width: 36px;
+  height: 36px;
+  flex: none;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-weight: 600;
+  font-size: 12px;
+  background: rgba(20, 21, 26, .05);
+  color: #5c5f6b;
+  box-shadow: 0 0 0 1px rgba(20, 21, 26, .05);
+}
+.lumii-avatar--agent {
+  color: #fff;
+  box-shadow: none;
+  background: linear-gradient(135deg, #c4b5fd, #a47bf0);
+}
+.ag2 { background: linear-gradient(135deg, #c4b5fd, #93e8d8); }
+.ag3 { background: linear-gradient(135deg, #f9b4c8, #c4b5fd); }
+.ag4 { background: linear-gradient(135deg, #b695f5, #8c5fe4); }
+.ag5 { background: linear-gradient(135deg, #93e8d8, #c4b5fd); }
+.ag6 { background: linear-gradient(135deg, #d0befc, #a47bf0); }
+
+.lumii-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 5px;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #a47bf0;
+  background: #f6f2fe;
+}
+.lumii-chip { color: #8c5fe4; font-weight: 500; }
+.lumii-chip--me { background: #f6f2fe; border-radius: 4px; padding: 0 3px; }
+.lumii-unread {
+  display: inline-grid;
+  place-items: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #a47bf0;
+  color: #fff;
+  font-size: 10px;
+}
+.lumii-cta {
+  height: 46px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: 11px;
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+  font-family: inherit;
+  background: linear-gradient(140deg, #b695f5, #a47bf0 60%, #8c5fe4);
+  box-shadow: 0 6px 18px rgba(164, 123, 240, .16);
+}
+.lumii-field {
+  width: 220px;
+  height: 46px;
+  padding: 0 13px;
+  border: 0;
+  border-radius: 11px;
+  background: #fff;
+  color: #1f2329;
+  font: inherit;
+  font-size: 14px;
+  box-shadow: 0 0 0 1px rgba(20, 21, 26, .11);
+}
+.lumii-glasscard {
+  width: 100%;
+  max-width: 300px;
+  padding: 20px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, .82);
+  backdrop-filter: blur(22px) saturate(1.3);
+  -webkit-backdrop-filter: blur(22px) saturate(1.3);
+  box-shadow: 0 18px 52px rgba(20, 21, 26, .10), 0 0 0 1px rgba(20, 21, 26, .06);
+}
+
+/* 圆角与图标线宽的阶梯示意 */
+.radii { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
+.radii i {
+  width: 74px;
+  height: 74px;
+  display: grid;
+  place-items: flex-end center;
+  padding-bottom: 8px;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 11px;
+  font-style: normal;
+  color: #5c5f6b;
+  background: #fff;
+  box-shadow: 0 0 0 1px rgba(20, 21, 26, .09);
+}
+
+/* 落地清单 */
+.checks { list-style: none; padding: 0; margin: 16px 0 0; max-width: 74ch; }
+.checks li {
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--hair-soft);
+  font-size: 14px;
+  color: var(--ink-2);
+}
+.checks li b { color: var(--ink); font-weight: 600; }
+.checks .mk {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.checks .yes { color: #1f9d7a; }
+.checks .no { color: #d0453f; }
+
+footer {
+  margin-top: 88px;
+  padding-top: 28px;
+  border-top: 1px solid var(--hair);
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 11.5px;
+  color: var(--ink-3);
+  line-height: 1.9;
+}
+
+@media (max-width: 880px) {
+  .wrap { grid-template-columns: 1fr; gap: 0; }
+  .toc {
+    position: static;
+    padding: 32px 0 0;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 4px 18px;
+  }
+  .page { padding: 0 20px 80px; }
+  .masthead { padding-top: 48px; }
+}
+</style>
+
+</head>
+<body>
+<div class="page">
+
+  <header class="masthead">
+    <p class="eyebrow">Lumii AI 控制台 · 前端视觉规范 v2</p>
+    <h1>从格子界面<br>换成<em>一块极光画布</em></h1>
+    <p class="lede">
+      这一版的核心不是换个主色，而是换了界面的组织方式：整个应用共用一层带极光渐变的画布，
+      各栏不再各自铺不透明底色、不再用 1px 线切开，而是靠毛玻璃透出深浅。
+      本文给出全部设计令牌、材质配方与逐个元素的 CSS，取值与当前分支源码一字不差，可直接复制。
+    </p>
+    <div class="factbar">
+      <span><b>定稿</b> Lumii 原型 4a</span>
+      <span><b>更新</b> 2026-08-20</span>
+      <span><b>主色</b> #A47BF0</span>
+      <span><b>字体</b> Instrument Sans / JetBrains Mono</span>
+      <span><b>主题</b> 仅浅色</span>
+    </div>
+  </header>
+
+  <div class="wrap">
+
+    <nav class="toc" aria-label="目录">
+      <a href="#change"><span>01</span>改了什么</a>
+      <a href="#color"><span>02</span>色彩</a>
+      <a href="#material"><span>03</span>材质与层次</a>
+      <a href="#type"><span>04</span>字体</a>
+      <a href="#shape"><span>05</span>形状与图标</a>
+      <a href="#tokens"><span>06</span>令牌全文</a>
+      <a href="#components"><span>07</span>元素 CSS</a>
+      <a href="#layout"><span>08</span>布局结构</a>
+      <a href="#a11y"><span>09</span>无障碍与降级</a>
+      <a href="#todo"><span>10</span>落地清单</a>
+    </nav>
+
+    <main>
+
+      <!-- ══════════════ 01 ══════════════ -->
+      <section id="change">
+        <span class="sec-no">01</span>
+        <h2>改了什么</h2>
+        <p>七条改动，按影响面从大到小。后面每一节都是对其中一条的展开。</p>
+
+        <div class="tablewrap">
+          <table>
+            <thead>
+              <tr><th>项</th><th>旧</th><th>新</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>画布</td>
+                <td>各栏各自 <span class="mono">#fff</span> / <span class="mono">#f5f6f7</span> 实底</td>
+                <td>全局一层 <span class="mono">--app-canvas</span>：<span class="mono">#F7F7FA</span> + 三团极光</td>
+              </tr>
+              <tr>
+                <td>分栏</td>
+                <td><span class="mono">border-right: 1px solid</span></td>
+                <td>毛玻璃 + <span class="mono">box-shadow</span> 发丝线，会话栏完全透明</td>
+              </tr>
+              <tr>
+                <td>主色</td>
+                <td>蓝紫 <span class="mono">#5B67E8</span></td>
+                <td>浅紫三档 <span class="mono">#B695F5 / #A47BF0 / #8C5FE4</span></td>
+              </tr>
+              <tr>
+                <td>描边</td>
+                <td><span class="mono">border: 1px solid var(--line)</span></td>
+                <td><span class="mono">box-shadow: 0 0 0 1px rgba(20,21,26,.06)</span></td>
+              </tr>
+              <tr>
+                <td>头像</td>
+                <td>按名字散列的饱和色圆形</td>
+                <td>圆角方；人与会话中性灰，只有智能体保留品牌渐变</td>
+              </tr>
+              <tr>
+                <td>字体</td>
+                <td>系统默认</td>
+                <td>Instrument Sans（拉丁）+ JetBrains Mono（元信息）</td>
+              </tr>
+              <tr>
+                <td>栏结构</td>
+                <td>导航栏内含会话列表，导航栏可拖宽</td>
+                <td>会话栏独立成栏（只在「对话」出现）；导航栏定宽 216 / 60</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="note">
+          <b>一条贯穿全篇的规则：不要用 border 画线。</b>
+          半透明的栏与卡片压在渐变上，1px 实线会在浅色背景里显出一条硬边，
+          而 <code>box-shadow: 0 0 0 1px</code> 是半透明的墨，会跟着背景一起走。
+          除表格内部的 <code>divide-y</code> 外，全站已无 1px 边框。
+        </div>
+      </section>
+
+      <!-- ══════════════ 02 ══════════════ -->
+      <section id="color">
+        <span class="sec-no">02</span>
+        <h2>色彩</h2>
+        <p>
+          一支紫贯穿全局，一支薄荷只出现在渐变里。灰阶是暖中性（<span class="mono">#1F2329</span> 系），
+          不要换成纯黑纯灰。
+        </p>
+
+        <h4>主色 · 三档</h4>
+        <div class="swatches">
+          <div class="sw"><i style="background:#b695f5"></i><div><b>#B695F5</b><em>--primary-light</em><span>渐变高光端。只在渐变里出现，不单独用。</span></div></div>
+          <div class="sw"><i style="background:#a47bf0"></i><div><b>#A47BF0</b><em>--primary</em><span>ACC。填充、图标、选中态、徽标、描边。</span></div></div>
+          <div class="sw"><i style="background:#8c5fe4"></i><div><b>#8C5FE4</b><em>--primary-h / --primary-ink</em><span>hover、渐变暗端，以及<strong>所有紫色小字</strong>。</span></div></div>
+          <div class="sw"><i style="background:#f6f2fe"></i><div><b>#F6F2FE</b><em>--primary-bg</em><span>徽标底、@自己的芯片底。</span></div></div>
+          <div class="sw"><i style="background:#faf8fe"></i><div><b>#FAF8FE</b><em>--primary-bg-weak</em><span>文件夹树里祖先行的弱高亮。</span></div></div>
+        </div>
+
+        <div class="note">
+          <b>紫色的字用 <code>--primary-ink</code>，不用 <code>--primary</code>。</b>
+          <span class="mono">#A47BF0</span> 压在白底是 3.15:1、压在自己那条淡紫气泡上只有 2.75:1；
+          <span class="mono">#8C5FE4</span> 分别是 4.31:1 和 3.76:1。填充与图标用前者，小字一律后者。
+        </div>
+
+        <h4>中性 · 灰阶</h4>
+        <div class="swatches">
+          <div class="sw"><i style="background:#f7f7fa"></i><div><b>#F7F7FA</b><em>--bg</em><span>画布底色，极光叠在它上面。</span></div></div>
+          <div class="sw"><i style="background:#ffffff"></i><div><b>#FFFFFF</b><em>--panel</em><span>被「抬起来」的东西：选中行、弹层、卡片。</span></div></div>
+          <div class="sw"><i style="background:#dee0e3"></i><div><b>#DEE0E3</b><em>--line</em><span>结构边界（现多由发丝阴影代替）。</span></div></div>
+          <div class="sw"><i style="background:#ebecee"></i><div><b>#EBECEE</b><em>--line-soft</em><span>块内部分隔线，比外框浅一档。</span></div></div>
+          <div class="sw"><i style="background:#1f2329"></i><div><b>#1F2329</b><em>--ink</em><span>正文。白底 16:1。</span></div></div>
+          <div class="sw"><i style="background:#646a73"></i><div><b>#646A73</b><em>--ink-2</em><span>次要文字、未选中的导航项。</span></div></div>
+          <div class="sw"><i style="background:#8f959e"></i><div><b>#8F959E</b><em>--ink-3</em><span>占位符、时间、图标默认色。</span></div></div>
+          <div class="sw"><i style="background:#5c5f6b"></i><div><b>#5C5F6B</b><em>头像字色</em><span>压在 rgba(20,21,26,.05) 上约 6.2:1。</span></div></div>
+        </div>
+
+        <h4>语义色</h4>
+        <div class="swatches">
+          <div class="sw"><i style="background:#34c724"></i><div><b>#34C724</b><em>--ok / --ok-bg #EAFBE7</em><span>成功、在线。</span></div></div>
+          <div class="sw"><i style="background:#ff8800"></i><div><b>#FF8800</b><em>--warn / --warn-bg #FFF5E6</em><span>告警。</span></div></div>
+          <div class="sw"><i style="background:#f54a45"></i><div><b>#F54A45</b><em>--danger / --danger-bg #FEF1F1</em><span>危险、失败、@到我的提示。</span></div></div>
+          <div class="sw"><i style="background:#7f3bf5"></i><div><b>#7F3BF5</b><em>--purple / --purple-bg #F3EDFF</em><span>标签类紫，与主色区分开。</span></div></div>
+        </div>
+
+        <h4>品牌渐变球 · 四色</h4>
+        <p>logo、favicon、智能体头像、极光画布全部只从这四支取色，颜色再多也还在一个家族里。</p>
+        <div class="swatches">
+          <div class="sw"><i style="background:#c4b5fd"></i><div><b>#C4B5FD</b><em>薰衣草</em><span>球体主色、渐变起点。</span></div></div>
+          <div class="sw"><i style="background:#a47bf0"></i><div><b>#A47BF0</b><em>紫</em><span>与主色同一支。</span></div></div>
+          <div class="sw"><i style="background:#f9b4c8"></i><div><b>#F9B4C8</b><em>粉</em><span>只在球体与智能体渐变里。</span></div></div>
+          <div class="sw"><i style="background:#93e8d8"></i><div><b>#93E8D8</b><em>薄荷</em><span>画布左下那团、下划线与标题渐变的收尾。</span></div></div>
+        </div>
+
+        <h4>极光画布配方</h4>
+        <p>右上紫、中上淡紫、左下薄荷。三团都从视口外起，只让边缘的余晖落进画面。</p>
+<pre><span class="c">/* web/src/styles.css —— 整个应用共用这一层 */</span>
+<span class="p">--app-canvas</span>:
+  radial-gradient(820px 600px at 96% -14%, rgba(176, 140, 248, .42), transparent 68%),
+  radial-gradient(540px 420px at 72% -6%,  rgba(208, 190, 252, .30), transparent 72%),
+  radial-gradient(620px 480px at 0%  96%,  rgba(147, 232, 216, .28), transparent 64%),
+  var(--bg);</pre>
+<pre><span class="c">/* 登录页更淡，并且缓慢漂移 —— web/src/pages/login.css */</span>
+.login-page::before {
+  content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(820px 600px at 16% -12%, rgba(164, 123, 240, .16), transparent 62%),
+    radial-gradient(680px 520px at 94% -8%,  rgba(164, 123, 240, .16), transparent 62%),
+    radial-gradient(560px 420px at 46% -6%,  rgba(164, 123, 240, .10), transparent 68%),
+    radial-gradient(720px 560px at 0%  96%,  rgba(147, 232, 216, .22), transparent 66%);
+  animation: login-aurora-drift 24s ease-in-out infinite;
+}
+@keyframes login-aurora-drift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50%      { transform: translate3d(-2%, 1.5%, 0) scale(1.06); }
+}
+@media (prefers-reduced-motion: reduce) { .login-page::before { animation: none; } }</pre>
+      </section>
+
+      <!-- ══════════════ 03 ══════════════ -->
+      <section id="material">
+        <span class="sec-no">03</span>
+        <h2>材质与层次</h2>
+        <p>
+          界面只有四种材质。选哪一种取决于这块东西离画布多远 —— 越是「被拎出来」的，
+          越不透明、投影越散。
+        </p>
+
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th>层</th><th>配方</th><th>用在</th></tr></thead>
+            <tbody>
+              <tr>
+                <td>画布</td>
+                <td class="mono">var(--app-canvas)</td>
+                <td>Shell 最外层。其余各栏一律不铺不透明底色</td>
+              </tr>
+              <tr>
+                <td>玻璃 · 薄</td>
+                <td class="mono">rgba(255,255,255,.55)<br>blur(18px) saturate(1.25)</td>
+                <td>左侧导航栏（展开态与收起态）。薄到能透出极光</td>
+              </tr>
+              <tr>
+                <td>玻璃 · 厚</td>
+                <td class="mono">rgba(255,255,255,.80~.82)<br>blur(22px) saturate(1.3)</td>
+                <td>输入框、登录卡片。唯一「浮在最上面」的一层</td>
+              </tr>
+              <tr>
+                <td>白卡</td>
+                <td class="mono">#fff + 发丝描边 + 浅投影</td>
+                <td>选中的导航行 / 会话行、分段控件的选中段、弹层</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h4>阴影档位</h4>
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th>用途</th><th>取值</th></tr></thead>
+            <tbody>
+              <tr><td>发丝描边（代替 border）</td><td class="mono">0 0 0 1px rgba(20, 21, 26, .06)</td></tr>
+              <tr><td>发丝描边 · 主色（选中）</td><td class="mono">0 0 0 1px rgba(122, 79, 224, .14~.16)</td></tr>
+              <tr><td>栏与栏之间的竖缝</td><td class="mono">1px 0 0 rgba(20, 21, 26, .06)</td></tr>
+              <tr><td>抬起 · 一档（选中行、分段）</td><td class="mono">0 1px 2px rgba(20, 21, 26, .06)</td></tr>
+              <tr><td>抬起 · 二档（会话选中卡）</td><td class="mono">0 2px 10px rgba(20, 21, 26, .05)</td></tr>
+              <tr><td>浮层 <span class="mono">--sh-2</span></td><td class="mono">0 6px 24px rgba(31, 35, 41, .14)</td></tr>
+              <tr><td>输入框（唯一的深投影）</td><td class="mono">0 14px 44px rgba(20, 21, 26, .09)</td></tr>
+              <tr><td>玻璃卡片</td><td class="mono">0 18px 52px rgba(20, 21, 26, .10)</td></tr>
+              <tr><td>主色按钮</td><td class="mono">0 6px 18px rgba(164, 123, 240, .16)　hover .28</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="spec">
+          <div class="spec-label">四种材质并置在同一块画布上</div>
+          <div class="spec-row">
+            <div class="lumii-rail">
+              <div class="lumii-nav-row is-on">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2Z"/><path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1"/></svg>
+                对话
+              </div>
+              <div class="lumii-nav-row">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2M20 14h2M15 13v2M9 13v2"/></svg>
+                智能体
+              </div>
+              <div class="lumii-nav-row">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+                智能表
+              </div>
+            </div>
+            <div>
+              <div class="lumii-search">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                搜索会话、知识与成员
+                <span class="lumii-kbd">⌘K</span>
+              </div>
+              <div style="height:12px"></div>
+              <div class="lumii-conv is-active">
+                <span class="lumii-avatar">增长</span>
+                <span style="min-width:0">
+                  <b>增长周会</b>
+                  <small>下周的投放预算已经拆好了</small>
+                </span>
+              </div>
+              <div class="lumii-conv is-hover">
+                <span class="lumii-avatar">小舟</span>
+                <span style="min-width:0">
+                  <b style="color:#1f2329">技术支持</b>
+                  <small>已同步到工单 #2041</small>
+                </span>
+              </div>
+            </div>
+            <div class="lumii-glasscard">
+              <div style="font-weight:600;margin-bottom:6px">玻璃 · 厚</div>
+              <div style="font-size:13px;color:#646a73;line-height:1.65">
+                .82 不透明度 + blur(22px)。登录卡与输入框用它，别处不要。
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════ 04 ══════════════ -->
+      <section id="type">
+        <span class="sec-no">04</span>
+        <h2>字体</h2>
+        <p>
+          两支字体，分工明确：<strong>Instrument Sans</strong> 排一切正文与标题，
+          <strong>JetBrains Mono</strong> 只排「元信息」—— 时间戳、编号、快捷键、头像缩写、
+          表头、眉标。中文没有对应字形，自动回落到苹方/黑体，所以等宽只作用在拉丁字与数字上。
+        </p>
+
+<pre><span class="c">&lt;!-- web/index.html --&gt;</span>
+&lt;link rel="preconnect" href="https://fonts.googleapis.com"&gt;
+&lt;link rel="preconnect" href="https://fonts.gstatic.com" crossorigin&gt;
+&lt;link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap"&gt;</pre>
+
+<pre><span class="p">--font-display</span>: "Instrument Sans", -apple-system, BlinkMacSystemFont,
+                 "PingFang SC", "Hiragino Sans GB", sans-serif;
+<span class="p">--font-mono</span>:    "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+body {
+  font-family: var(--font-display);
+  font-size: 14px;
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}</pre>
+
+        <h4>字号表</h4>
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th>用途</th><th>字号 / 字重</th><th>字体</th></tr></thead>
+            <tbody>
+              <tr><td>营销大标题（登录页）</td><td class="mono">clamp(32px, 3.35vw, 48px) / 600 / -.02em</td><td>Display</td></tr>
+              <tr><td>页面标题</td><td class="mono">26px / 600 / -.02em</td><td>Display</td></tr>
+              <tr><td>正文基准</td><td class="mono">14px / 400</td><td>Display</td></tr>
+              <tr><td>导航项</td><td class="mono">13.5px / 400，选中 600</td><td>Display</td></tr>
+              <tr><td>会话标题 · 消息气泡</td><td class="mono">13px / 400，未读 600</td><td>Display</td></tr>
+              <tr><td>分段控件</td><td class="mono">12.5px / 400，选中 600</td><td>Display</td></tr>
+              <tr><td>会话摘要 · 辅助说明</td><td class="mono">12px / 400 / --ink-3</td><td>Display</td></tr>
+              <tr><td>「智能体」徽标</td><td class="mono">10.5px / 600</td><td>Display</td></tr>
+              <tr><td>眉标 · 表头 · 时间戳</td><td class="mono">10~13px / 500~600 / letter-spacing .02~.08em</td><td>Mono</td></tr>
+              <tr><td>快捷键 ⌘K</td><td class="mono">10px / 400</td><td>Mono</td></tr>
+              <tr><td>头像缩写</td><td class="mono">size × 0.34 / 600</td><td>Mono</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="note">
+          <b>渐变字只用在营销标题上。</b>
+          <code>background: linear-gradient(100deg, #B695F5, #C4B5FD 45%, #93E8D8)</code> +
+          <code>background-clip: text</code>。产品界面里的任何文字都不要用渐变 —— 那会让它读起来像广告。
+        </div>
+      </section>
+
+      <!-- ══════════════ 05 ══════════════ -->
+      <section id="shape">
+        <span class="sec-no">05</span>
+        <h2>形状与图标</h2>
+        <p>圆角比过去大一档，且成阶梯：元素越大，圆角越大。</p>
+
+        <div class="radii">
+          <i style="border-radius:5px">5px</i>
+          <i style="border-radius:8px">8px</i>
+          <i style="border-radius:9px">9px</i>
+          <i style="border-radius:11px">11px</i>
+          <i style="border-radius:12px">12px</i>
+          <i style="border-radius:14px">14px</i>
+          <i style="border-radius:18px">18px</i>
+          <i style="border-radius:20px">20px</i>
+        </div>
+
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th>半径</th><th>用在</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">5px</td><td>⌘K 键帽、「智能体」徽标</td></tr>
+              <tr><td class="mono">8px</td><td>发送按钮 <span class="mono">--radius-xs</span></td></tr>
+              <tr><td class="mono">9px</td><td>分段控件的选中段</td></tr>
+              <tr><td class="mono">11px</td><td>导航行、图标按钮、输入框、搜索框、分段控件外壳、头像（36px）</td></tr>
+              <tr><td class="mono">12px</td><td>会话行、环境卡、基础卡片 <span class="mono">--rl</span></td></tr>
+              <tr><td class="mono">14px</td><td>消息气泡</td></tr>
+              <tr><td class="mono">18px</td><td>消息输入框、登录页产品截图框</td></tr>
+              <tr><td class="mono">20px</td><td>登录卡片</td></tr>
+              <tr><td class="mono">999px</td><td>未读徽标、隔离标签、情境药丸</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h4>图标</h4>
+        <p>
+          lucide-react。<strong>线宽统一细一档</strong>：导航与内容图标 <code>strokeWidth 1.8</code>，
+          工具栏图标 <code>1.7</code>，小号搜索 <code>1.9</code> —— 不要用 lucide 默认的 2。
+          尺寸：导航 17、工具栏 16、分段控件 14、行内 14~15。
+        </p>
+
+        <h4>头像</h4>
+        <p>
+          全部改为<strong>圆角方</strong>，半径 <code>max(6, round(size × 0.31))</code>，
+          所以 28px→9px、36px→11px、48px→15px。缩写用等宽字体，一列头像宽度不会左右晃。
+        </p>
+        <div class="spec spec--flat">
+          <div class="spec-label">人 / 会话（中性灰） · 智能体（品牌渐变，六选一按名字哈希）</div>
+          <div class="spec-row" style="gap:10px;align-items:center">
+            <span class="lumii-avatar">ZB</span>
+            <span class="lumii-avatar">KZ</span>
+            <span class="lumii-avatar">增长</span>
+            <span style="width:14px"></span>
+            <span class="lumii-avatar lumii-avatar--agent">SH</span>
+            <span class="lumii-avatar lumii-avatar--agent ag2">TB</span>
+            <span class="lumii-avatar lumii-avatar--agent ag3">KF</span>
+            <span class="lumii-avatar lumii-avatar--agent ag4">YY</span>
+            <span class="lumii-avatar lumii-avatar--agent ag5">ZS</span>
+            <span class="lumii-avatar lumii-avatar--agent ag6">CW</span>
+          </div>
+        </div>
+        <div class="note">
+          <b>只有智能体的头像有颜色。</b>人和会话一律中性灰 —— 颜色留给真正要抢注意力的东西
+          （未读徽标、「智能体」徽标、选中态）。头像一旦有六种颜色，那几个要紧的信号就淹了。
+        </div>
+      </section>
+
+      <!-- ══════════════ 06 ══════════════ -->
+      <section id="tokens">
+        <span class="sec-no">06</span>
+        <h2>令牌全文</h2>
+        <p>直接覆盖 <code>web/src/styles.css</code> 的 <code>:root</code>。下半段是把 vendor <code>@lumii/ui</code> 的变量接到这套上 —— 变量名不动，只换取值，vendor 组件一行都不用改。</p>
+
+<pre>:root {
+  <span class="c">/* ── 主色 ── */</span>
+  <span class="p">--primary</span>:          #a47bf0;   <span class="c">/* 填充 / 图标 / 选中 / 描边 */</span>
+  <span class="p">--primary-h</span>:        #8c5fe4;   <span class="c">/* hover、渐变暗端 */</span>
+  <span class="p">--primary-light</span>:    #b695f5;   <span class="c">/* 渐变高光端 */</span>
+  <span class="p">--primary-ink</span>:      #8c5fe4;   <span class="c">/* 所有紫色小字 */</span>
+  <span class="p">--primary-bg</span>:       #f6f2fe;
+  <span class="p">--primary-bg-weak</span>:  #faf8fe;
+
+  <span class="c">/* ── 画布 ── */</span>
+  <span class="p">--bg</span>:     #f7f7fa;
+  <span class="p">--panel</span>:  #fff;
+  <span class="p">--panel-2</span>: #f7f8fa;
+  <span class="p">--app-canvas</span>:
+    radial-gradient(820px 600px at 96% -14%, rgba(176, 140, 248, .42), transparent 68%),
+    radial-gradient(540px 420px at 72% -6%,  rgba(208, 190, 252, .30), transparent 72%),
+    radial-gradient(620px 480px at 0%  96%,  rgba(147, 232, 216, .28), transparent 64%),
+    var(--bg);
+
+  <span class="c">/* ── 文字与线 ── */</span>
+  <span class="p">--ink</span>:       #1f2329;
+  <span class="p">--ink-2</span>:     #646a73;
+  <span class="p">--ink-3</span>:     #8f959e;
+  <span class="p">--line</span>:      #dee0e3;
+  <span class="p">--line-soft</span>: #ebecee;
+
+  <span class="c">/* ── 语义 ── */</span>
+  <span class="p">--ok</span>: #34c724;      <span class="p">--ok-bg</span>: #eafbe7;
+  <span class="p">--warn</span>: #ff8800;    <span class="p">--warn-bg</span>: #fff5e6;
+  <span class="p">--danger</span>: #f54a45;  <span class="p">--danger-bg</span>: #fef1f1;
+  <span class="p">--purple</span>: #7f3bf5;  <span class="p">--purple-bg</span>: #f3edff;
+
+  <span class="c">/* ── 气泡 / 形状 / 阴影 ── */</span>
+  <span class="p">--bubble-mine</span>: rgba(164, 123, 240, .07);
+  <span class="p">--rl</span>: 12px;
+  <span class="p">--sh</span>:   0 2px 8px  rgba(31, 35, 41, .06);
+  <span class="p">--sh-2</span>: 0 6px 24px rgba(31, 35, 41, .14);
+
+  <span class="c">/* ── 字体 ── */</span>
+  <span class="p">--font-display</span>: "Instrument Sans", -apple-system, BlinkMacSystemFont,
+                   "PingFang SC", "Hiragino Sans GB", sans-serif;
+  <span class="p">--font-mono</span>: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  <span class="c">/* ── 接 vendor @lumii/ui：变量名不动，只换取值 ── */</span>
+  <span class="p">--page-bg</span>: var(--bg);
+  <span class="p">--glass</span>: var(--panel);          <span class="p">--glass-strong</span>: var(--panel);
+  <span class="p">--glass-hover</span>: #f7f8fa;
+  <span class="p">--text</span>: var(--ink);            <span class="p">--text-secondary</span>: var(--ink-2);
+  <span class="p">--text-muted</span>: var(--ink-3);
+  <span class="p">--accent</span>: var(--primary);      <span class="p">--accent-light</span>: var(--primary-bg);
+  <span class="p">--accent-text</span>: var(--primary); <span class="p">--accent-on-dark</span>: #9aa4f2;
+  <span class="p">--border</span>: var(--line);
+  <span class="p">--shadow-sm</span>: var(--sh);        <span class="p">--shadow-card</span>: var(--sh);
+  <span class="p">--shadow-lg</span>: 0 12px 40px rgba(31, 35, 41, .1);
+  <span class="p">--radius</span>: var(--rl);
+  <span class="p">--radius-sm</span>: 10px;            <span class="p">--radius-xs</span>: 8px;
+  <span class="p">--color-error</span>: var(--danger);
+  <span class="p">--color-success</span>: var(--ok);
+  <span class="p">--color-warning</span>: var(--warn);
+}</pre>
+      </section>
+
+      <!-- ══════════════ 07 ══════════════ -->
+      <section id="components">
+        <span class="sec-no">07</span>
+        <h2>元素 CSS</h2>
+        <p>
+          源码里这些是内联样式与 Tailwind 类，下面翻成可直接复制的 CSS。
+          取值与 <code>web/src/shell.tsx</code>、<code>chat.tsx</code>、<code>module-switch.tsx</code>、
+          <code>ChatInput.tsx</code>、<code>login.css</code> 完全一致。
+        </p>
+
+        <h3>左侧导航栏</h3>
+        <div class="spec">
+          <div class="spec-label">rail · 216px · 玻璃 .55</div>
+          <div class="lumii-rail">
+            <div class="lumii-seg">
+              <span class="is-on">协作</span><span>小程序</span>
+            </div>
+            <div class="lumii-nav-row is-on">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2Z"/><path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1"/></svg>
+              对话
+            </div>
+            <div class="lumii-nav-row">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2M20 14h2M15 13v2M9 13v2"/></svg>
+              智能体
+            </div>
+            <div class="lumii-nav-row">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              自动化
+            </div>
+          </div>
+        </div>
+<pre><span class="c">/* 栏本体。窄屏抽屉态改用 rgba(255,255,255,.97) —— .55 会把身后
+   那层 rgba(31,35,41,.35) 的遮罩一起透进来，整条栏发灰。 */</span>
+.rail {
+  width: 216px;                              <span class="c">/* 收起态 60px，不可拖 */</span>
+  background: rgba(255, 255, 255, .55);
+  backdrop-filter: blur(18px) saturate(1.25);
+  -webkit-backdrop-filter: blur(18px) saturate(1.25);
+  box-shadow: 1px 0 0 rgba(20, 21, 26, .06); <span class="c">/* 竖缝，不是 border */</span>
+}
+
+<span class="c">/* 导航行：选中态是白卡 + 主色描边，不是只把文字染色 ——
+   玻璃底上纯染色几乎看不出来。 */</span>
+.rail-nav-row {
+  display: flex; align-items: center; gap: 10px;
+  height: 38px; padding: 0 10px; margin-bottom: 3px;
+  border-radius: 11px;
+  font-size: 13.5px; font-weight: 400;
+  color: var(--ink-2);
+}
+.rail-nav-row.is-on {
+  color: var(--primary);
+  font-weight: 600;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(20, 21, 26, .06),
+              0 0 0 1px rgba(122, 79, 224, .14);
+}
+<span class="c">/* 收起态：40 × 40 的方块，同一套选中样式，圆角 11px */</span></pre>
+
+        <h3>分段控件（协作 / 小程序）</h3>
+<pre><span class="c">/* 凹槽用一层极淡的墨，不用边框 —— 1px 线在玻璃栏上会多出一道硬边 */</span>
+.module-switch {
+  display: flex; align-items: center; gap: 3px;
+  width: 100%; padding: 3px;
+  border-radius: 11px;
+  background: rgba(20, 21, 26, .045);
+}
+.module-switch__tab {
+  flex: 1; height: 28px;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  border-radius: 9px;
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+.module-switch__tab[aria-selected="true"] {
+  color: var(--primary);
+  font-weight: 600;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(20, 21, 26, .07);
+}</pre>
+
+        <h3>会话栏</h3>
+<pre><span class="c">/* 这一栏不铺底、不描边 —— 极光直接透上来，会话行靠自己的圆角卡片
+   浮在上面。铺一层玻璃再画一条竖线，就又变回三个格子了。 */</span>
+.thread-column { width: 268px; background: transparent; }   <span class="c">/* 可拖 220~420 */</span>
+
+<span class="c">/* 搜索框长得像输入框，点了开全局面板（⌘K），所以是 button 不是 input */</span>
+.thread-search {
+  width: 100%; height: 36px; padding: 0 10px;
+  display: flex; align-items: center; gap: 8px;
+  border: 0; border-radius: 11px;
+  font-size: 13px; color: var(--ink-3); text-align: left;
+  background: rgba(255, 255, 255, .72);
+  box-shadow: 0 1px 2px rgba(20, 21, 26, .04),
+              0 0 0 1px rgba(20, 21, 26, .06);
+}
+.thread-search kbd {
+  margin-left: auto; padding: 1px 6px; border-radius: 5px;
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--ink-3); background: rgba(20, 21, 26, .05);
+}
+
+<span class="c">/* 会话行。选中是一张浮起来的白卡片，不再是一块灰底 ——
+   灰底压在渐变上会变成一块死板的方块。 */</span>
+.conv-row {
+  display: flex; align-items: stretch; gap: 10px;
+  padding: 8px 10px; border-radius: 12px;
+  transition: background .12s;
+}
+.conv-row:hover      { background: rgba(255, 255, 255, .55); }
+.conv-row.is-active  {
+  background: #fff;
+  box-shadow: 0 2px 10px rgba(20, 21, 26, .05),
+              0 0 0 1px rgba(122, 79, 224, .16);
+}
+.conv-row__title      { font-size: 13px; }
+.conv-row.is-active .conv-row__title,
+.conv-row.has-unread  .conv-row__title { font-weight: 600; }
+.conv-row.is-active   .conv-row__title { color: var(--primary); }
+.conv-row__preview    { font-size: 12px; color: var(--ink-3); }
+.conv-row__unread {
+  min-width: 16px; height: 16px; padding: 0 4px;
+  display: grid; place-items: center;
+  border-radius: 999px;
+  font-size: 10px; color: #fff;
+  background: var(--primary);
+}
+.conv-row__mentioned { color: var(--danger); }   <span class="c">/* @到我那个前缀 */</span></pre>
+
+        <h3>消息气泡 · 三种</h3>
+        <div class="spec">
+          <div class="spec-label">自己 / 智能体 / 他人</div>
+          <div style="display:flex;flex-direction:column;gap:12px;align-items:flex-start">
+            <div class="lumii-bubble lumii-bubble--mine" style="align-self:flex-end">
+              帮我把上周的投放数据拉一下，按渠道分开
+            </div>
+            <div>
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;font-size:12px;color:#646a73">
+                <span>数据助手</span>
+                <span class="lumii-badge">智能体</span>
+                <span style="color:#8f959e;font-family:'JetBrains Mono',monospace;font-size:11px">14:02</span>
+              </div>
+              <div class="lumii-bubble lumii-bubble--agent">
+                拉好了。上周四个渠道合计消耗 ¥182,400，其中信息流占 61%。
+                <span class="lumii-chip">@周斌</span> 你要的分渠道明细我放进智能表了。
+              </div>
+            </div>
+            <div>
+              <div style="margin-bottom:5px;font-size:12px;color:#646a73">周斌 <span style="color:#8f959e;font-family:'JetBrains Mono',monospace;font-size:11px">14:05</span></div>
+              <div class="lumii-bubble lumii-bubble--other">
+                收到，<span class="lumii-chip lumii-chip--me">@我</span> 明早同步给客户。
+              </div>
+            </div>
+          </div>
+        </div>
+<pre><span class="c">/* 半透明是关键：底下是极光画布，实色会糊出一块方斑 */</span>
+.bubble        { padding: 12px 16px; border-radius: 14px;
+                 font-size: 13px; line-height: 1.7; color: var(--ink); }
+
+.bubble--mine  { background: var(--bubble-mine);            <span class="c">/* rgba(164,123,240,.07) */</span>
+                 box-shadow: 0 0 0 1px rgba(164, 123, 240, .13); }
+.bubble--mine.is-sending { opacity: .92; }
+.bubble--mine.is-failed  { background: color-mix(in srgb, var(--bubble-mine) 55%, #d5d8dd); }
+
+<span class="c">/* 智能体：与它上面那张「工作过程」卡片同一种材质，读起来是同一段回答的两半 */</span>
+.bubble--agent { background: rgba(255, 255, 255, .66);
+                 backdrop-filter: blur(10px);
+                 -webkit-backdrop-filter: blur(10px);
+                 box-shadow: 0 0 0 1px rgba(20, 21, 26, .055); }
+
+<span class="c">/* 他人：同材质但不透玻璃，白一档 —— 群里要分得清同事说的和机器答的 */</span>
+.bubble--other { background: rgba(255, 255, 255, .86);
+                 box-shadow: 0 0 0 1px rgba(20, 21, 26, .055); }
+
+<span class="c">/* 「智能体」徽标：头像收成中性灰之后，这是全屏唯一带色的身份标识 */</span>
+.agent-badge   { padding: 1px 6px; border-radius: 5px;
+                 font-size: 10.5px; font-weight: 600;
+                 color: var(--primary); background: var(--primary-bg); }
+
+<span class="c">/* @ 芯片：字色用 --primary-ink（深一档），压在淡紫气泡上才够对比 */</span>
+.mention-chip        { color: var(--primary-ink); }
+.mention-chip--me    { color: var(--primary-ink); background: var(--primary-bg); }
+
+<span class="c">/* 气泡上方的发送方名字：平时是灰字，hover 才变成可点的 @名字 */</span>
+.mention-name         { color: var(--ink-2); cursor: pointer;
+                        background: none; border: 0; padding: 0; font: inherit; }
+.mention-name:hover   { color: var(--primary); text-decoration: underline; }
+.mention-name:hover::before { content: "@"; }   <span class="c">/* 纯装饰，不进 DOM */</span></pre>
+
+        <h3>会话顶栏</h3>
+<pre><span class="c">/* 不铺底、不描线 —— 一条横线会把刚打通的上下两半又切开。
+   滚动时消息从它下面穿过去，靠的是消息区自己的留白。 */</span>
+.chat-header { height: 56px; padding: 0 20px;
+               display: flex; align-items: center; gap: 12px;
+               background: transparent; }</pre>
+
+        <h3>消息输入框</h3>
+        <div class="spec">
+          <div class="spec-label">composer · 唯一「浮」在画布上方的东西</div>
+          <div class="lumii-composer">
+            <span>发消息，⌘↩ 发送　·　@ 唤起成员与智能体</span>
+            <span class="lumii-send">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 14-7-7 14-2-5-5-2Z"/></svg>
+            </span>
+          </div>
+        </div>
+<pre>.composer {
+  border-radius: 18px;
+  background: rgba(255, 255, 255, .80);
+  backdrop-filter: blur(22px) saturate(1.3);
+  -webkit-backdrop-filter: blur(22px) saturate(1.3);
+  border: none;
+  box-shadow: 0 14px 44px rgba(20, 21, 26, .09),
+              0 0 0 1px rgba(20, 21, 26, .06);
+}
+.composer__send {
+  width: 36px; height: 36px; border-radius: 8px;
+  display: grid; place-items: center; color: #fff;
+  background: linear-gradient(140deg, var(--primary-light),
+                              var(--primary) 60%, var(--primary-h));
+  box-shadow: 0 4px 14px rgba(122, 79, 224, .28);
+}
+.composer__send:disabled { opacity: .4; }</pre>
+
+        <h3>头像</h3>
+<pre><span class="c">/* 人 / 会话：中性灰。半径 = max(6, round(size × 0.31)) */</span>
+.avatar {
+  display: grid; place-items: center;
+  border-radius: 11px;                       <span class="c">/* 36px 尺寸对应值 */</span>
+  background: rgba(20, 21, 26, .05);
+  color: #5c5f6b;
+  box-shadow: 0 0 0 1px rgba(20, 21, 26, .05);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 12px;                           <span class="c">/* = max(9, round(size × 0.34)) */</span>
+}
+<span class="c">/* 会话头像是 SVG，圈层等价写法：
+   &lt;rect width="40" height="40" rx="12" fill="#f2f2f3"&gt;
+   + &lt;rect x=".5" y=".5" width="39" height="39" rx="11.5"
+       stroke="rgba(20,21,26,.07)"&gt;   —— SVG 里 box-shadow 不生效 */</span>
+
+<span class="c">/* 智能体兜底头像：六条渐变，按名字哈希取一条，全部取自品牌球四色 */</span>
+.avatar--agent { color: #fff; box-shadow: none;
+                 font-size: 11px; }          <span class="c">/* = max(9, round(size × 0.31)) */</span>
+.avatar--agent-1 { background: linear-gradient(135deg, #c4b5fd, #a47bf0); }
+.avatar--agent-2 { background: linear-gradient(135deg, #c4b5fd, #93e8d8); }
+.avatar--agent-3 { background: linear-gradient(135deg, #f9b4c8, #c4b5fd); }
+.avatar--agent-4 { background: linear-gradient(135deg, #b695f5, #8c5fe4); }
+.avatar--agent-5 { background: linear-gradient(135deg, #93e8d8, #c4b5fd); }
+.avatar--agent-6 { background: linear-gradient(135deg, #d0befc, #a47bf0); }</pre>
+
+        <h3>表单与按钮（登录页）</h3>
+        <div class="spec">
+          <div class="spec-label">field · cta</div>
+          <div class="spec-row" style="align-items:center;gap:12px">
+            <input class="lumii-field" value="zhoubin@lumii.cn" readonly aria-label="账号示例">
+            <button class="lumii-cta" type="button">登录</button>
+          </div>
+        </div>
+<pre><span class="c">/* 输入框：没有 border，那圈线是 box-shadow —— focus 时再叠一圈主色 */</span>
+.field {
+  height: 46px; padding: 0 13px;
+  border: none; border-radius: 11px;
+  background: var(--panel); color: var(--ink);
+  font: inherit; font-size: 14px;
+  box-shadow: 0 0 0 1px rgba(20, 21, 26, .11);
+  transition: box-shadow .16s ease;
+}
+.field::placeholder { color: var(--ink-2); }
+.field:focus-visible {
+  outline: 2px solid rgba(164, 123, 240, .28);
+  outline-offset: 1px;
+  box-shadow: 0 0 0 1px var(--primary);
+}
+
+<span class="c">/* 主按钮：渐变底 + 紫色投影，hover 抬 1px */</span>
+.btn-primary {
+  height: 46px; border: none; border-radius: 11px;
+  color: #fff; font-weight: 600;
+  background: linear-gradient(140deg, var(--primary-light),
+                              var(--primary) 60%, var(--primary-h));
+  box-shadow: 0 6px 18px rgba(164, 123, 240, .16);
+  transition: box-shadow .16s ease, transform .16s ease;
+}
+.btn-primary:hover:not(:disabled) {
+  box-shadow: 0 8px 24px rgba(164, 123, 240, .28);
+  transform: translateY(-1px);
+}
+
+<span class="c">/* 玻璃卡片（登录表单容器） */</span>
+.glass-card {
+  padding: 36px; border-radius: 20px;
+  background: rgba(255, 255, 255, .82);
+  backdrop-filter: blur(22px) saturate(1.3);
+  -webkit-backdrop-filter: blur(22px) saturate(1.3);
+  box-shadow: 0 18px 52px rgba(20, 21, 26, .10),
+              0 0 0 1px rgba(20, 21, 26, .06);
+}
+
+<span class="c">/* 标签页下划线：从左展开的渐变条，紫→薄荷 */</span>
+.tab { position: relative; padding: 4px 0 10px; color: var(--ink-2);
+       transition: color .16s ease; }
+.tab:hover { color: var(--ink); }
+.tab::after {
+  content: ""; position: absolute; left: 0; right: 100%; bottom: 0;
+  height: 2px; border-radius: 1px;
+  background: linear-gradient(90deg, var(--primary), #93e8d8);
+  transition: right .32s cubic-bezier(.4, 0, .2, 1);
+}
+.tab[aria-selected="true"]::after { right: 0; }
+.tab[aria-selected="true"] .num { color: var(--primary); }
+.tab .num { font-family: var(--font-mono); font-size: 10px; letter-spacing: .08em; }</pre>
+      </section>
+
+      <!-- ══════════════ 08 ══════════════ -->
+      <section id="layout">
+        <span class="sec-no">08</span>
+        <h2>布局结构</h2>
+        <p>桌面端最多三栏。会话列表<strong>从导航栏里搬了出来，自己占一栏</strong>，并且只在「对话」这一段出现。</p>
+
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th>栏</th><th>宽度</th><th>材质</th><th>出现在</th></tr></thead>
+            <tbody>
+              <tr><td>导航栏</td><td class="mono">216px / 收起 60px<br>不可拖</td><td>玻璃 .55</td><td>全部页面</td></tr>
+              <tr><td>会话栏</td><td class="mono">268px 默认<br><b>可拖</b> 220~420</td><td>完全透明</td><td>仅「对话」（<span class="mono">/</span> 与 <span class="mono">/c/&lt;id&gt;</span>）</td></tr>
+              <tr><td>主区</td><td class="mono">flex: 1</td><td>透明（画布直出）</td><td>全部页面</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h4>规则</h4>
+        <p>
+          · 可拖的是会话栏，不再是导航栏 —— 导航栏宽度由最长的名字决定，拖它没有意义。<br>
+          · 窄屏（<code>&lt; 768px</code>）没有第二栏，会话列表仍跟着导航一起收在抽屉里；抽屉态的玻璃换成 <code>.97</code>。<br>
+          · 导航项：对话 / 智能体 / 自动化 / 智能表 / 知识库 / 通讯录 / 设置。第一项从「新会话」改名「对话」，新建会话的入口移到会话栏标题行右边的 ＋。<br>
+          · 左栏底部自上而下：环境标识卡（<code>rgba(255,255,255,.62)</code> + 发丝描边，圆角 12）、账号行。<br>
+          · 顶栏高度 56px，透明无分割线。
+        </p>
+      </section>
+
+      <!-- ══════════════ 09 ══════════════ -->
+      <section id="a11y">
+        <span class="sec-no">09</span>
+        <h2>无障碍与降级</h2>
+
+        <h4>对比度：已知的取舍</h4>
+        <p>
+          <code>#A47BF0</code> 压在纯白上是 <strong>3.15:1</strong>，达不到 WCAG AA 对正文的 4.5:1。
+          这是照设计稿的用色 —— 主色只出现在<strong>短标签、图标、已经有底色衬托的小字</strong>上，
+          正文一律 <code>--ink</code>（16:1）。哪天要做合规，要动的是这几处用法，不是把主色调回深紫。
+        </p>
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th>组合</th><th>对比度</th><th>结论</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">#1F2329 on #fff</td><td class="mono">16.0:1</td><td>正文，充裕</td></tr>
+              <tr><td class="mono">#5C5F6B on rgba(20,21,26,.05)</td><td class="mono">6.2:1</td><td>头像缩写，充裕</td></tr>
+              <tr><td class="mono">#8C5FE4 on #fff</td><td class="mono">4.31:1</td><td>紫色小字的下限</td></tr>
+              <tr><td class="mono">#8C5FE4 on 淡紫气泡</td><td class="mono">3.76:1</td><td>@芯片，过线</td></tr>
+              <tr><td class="mono">#A47BF0 on #fff</td><td class="mono">3.15:1</td><td>仅限图标与徽标</td></tr>
+              <tr><td class="mono">#A47BF0 on 淡紫气泡</td><td class="mono">2.75:1</td><td><strong>禁止</strong>，用 --primary-ink</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>有两条测试钉着这些门槛：<code>chat-mention-card.test.tsx</code>（@芯片 ≥3:1）与 <code>theme-color-guard.test.ts</code>（旧色不得回流源码）。</p>
+
+        <h4>动效</h4>
+        <p>
+          全部动效都要在 <code>prefers-reduced-motion: reduce</code> 下关掉：登录页极光漂移、
+          <code>lumii-blink</code> 加载动画（改成静态 <code>opacity: .55</code>）、抽屉滑入。
+          时长基准：微交互 .16s，抽屉 .18~.2s，下划线 .32s，环境级 24s。
+        </p>
+
+        <h4>毛玻璃的降级</h4>
+        <p>
+          <code>backdrop-filter</code> 不支持时（老 Firefox、部分安卓 WebView），
+          半透明白仍会显示，只是不模糊 —— 界面仍可读，不需要额外兜底。
+          <strong>但要注意性能</strong>：大面积 backdrop-filter 在低端机上会掉帧，
+          已限制在导航栏、输入框、气泡、登录卡四处，不要再扩散。
+        </p>
+
+        <h4>焦点</h4>
+        <p>
+          可交互元素一律保留可见焦点环：<code>outline: 2px solid rgba(164,123,240,.28)</code> +
+          <code>outline-offset: 1px</code>。不要为了视觉整洁写 <code>outline: none</code>。
+        </p>
+      </section>
+
+      <!-- ══════════════ 10 ══════════════ -->
+      <section id="todo">
+        <span class="sec-no">10</span>
+        <h2>落地清单</h2>
+        <p>给接手改造的同学：以下是这套规范里最容易写错的几条。</p>
+
+        <ul class="checks">
+          <li><span class="mk no">✕</span><span><b>不要用 <code>border: 1px solid</code> 画容器边框。</b>换成 <code>box-shadow: 0 0 0 1px rgba(20,21,26,.06)</code>。表格内部的 <code>divide-y</code> 是唯一例外，且颜色必须写在 <code>divide-[...]</code> 工具类上 —— 写在父元素 inline style 里会静默失效。</span></li>
+          <li><span class="mk no">✕</span><span><b>不要给栏铺不透明底色。</b>除导航栏（玻璃 .55）外，会话栏与主区都是透明的，画布直出。铺一层白会把「呼吸感」整个抹掉。</span></li>
+          <li><span class="mk no">✕</span><span><b>不要用 <code>--primary</code> 当小号文字色。</b>紫色的字一律 <code>--primary-ink</code>。</span></li>
+          <li><span class="mk no">✕</span><span><b>不要给头像上色。</b>只有智能体的兜底头像用品牌渐变，人与会话一律中性灰。</span></li>
+          <li><span class="mk no">✕</span><span><b>不要在气泡里用实色底。</b><code>--bubble-mine</code> 是半透明的，实色会在渐变上糊出方斑。</span></li>
+          <li><span class="mk yes">✓</span><span><b>圆角按尺寸走阶梯。</b>小控件 5~9px、行与卡片 11~12px、气泡 14px、输入框与大卡 18~20px。</span></li>
+          <li><span class="mk yes">✓</span><span><b>lucide 图标线宽降到 1.7~1.8。</b>默认的 2 在这套通透的界面里太重。</span></li>
+          <li><span class="mk yes">✓</span><span><b>元信息用 <code>--font-mono</code>。</b>时间戳、编号、快捷键、表头、眉标、头像缩写 —— 但正文与标题不要用。</span></li>
+          <li><span class="mk yes">✓</span><span><b>新写的颜色必须来自本文的色板。</b><code>theme-color-guard.test.ts</code> 会拦下旧橘 <code>#E8734A</code> 与 vendor 旧蓝 <code>rgba(0,82,204)</code>；新增取值请一并加进那份守卫。</span></li>
+        </ul>
+
+        <h4>涉及的文件</h4>
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th>文件</th><th>承载</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">web/src/styles.css</td><td>全部令牌、画布配方、全局字体、原子类</td></tr>
+              <tr><td class="mono">web/index.html</td><td>Google Fonts 引入、favicon</td></tr>
+              <tr><td class="mono">web/src/shell.tsx</td><td>三栏结构、导航栏玻璃、导航行、会话栏、会话行</td></tr>
+              <tr><td class="mono">web/src/dev/shell.tsx</td><td>小程序模块的左栏（与协作左栏同一套玻璃）</td></tr>
+              <tr><td class="mono">web/src/pages/chat.tsx</td><td>顶栏、三种气泡、「智能体」徽标、@芯片</td></tr>
+              <tr><td class="mono">web/src/vendor/lumii-ui/…/ChatInput.tsx</td><td>输入框玻璃与发送按钮渐变</td></tr>
+              <tr><td class="mono">web/src/components/module-switch.tsx</td><td>分段控件</td></tr>
+              <tr><td class="mono">web/src/components/avatar.tsx</td><td>人的头像（<span class="mono">AVATAR_SURFACE</span> 三件套）</td></tr>
+              <tr><td class="mono">web/src/components/conv-avatar.tsx</td><td>会话头像（SVG）</td></tr>
+              <tr><td class="mono">web/src/pages/assistants/avatar.tsx</td><td>智能体头像与六条品牌渐变</td></tr>
+              <tr><td class="mono">web/src/components/brand.tsx</td><td>品牌球（四支渐变，与 favicon.svg 同源）</td></tr>
+              <tr><td class="mono">web/src/pages/login.css</td><td>登录页极光、玻璃卡、表单、标签页下划线</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <footer>
+        Lumii AI 控制台 · 前端视觉规范 v2 · 2026-08-20<br>
+        取值来源：当前工作分支的实际源码，与 Claude Design 定稿「Lumii 原型 4a」一致。<br>
+        本页正文即用 Instrument Sans / JetBrains Mono 排版，色彩取自同一套色板。
+      </footer>
+
+    </main>
+  </div>
+</div>
+
+</body>
+</html>
